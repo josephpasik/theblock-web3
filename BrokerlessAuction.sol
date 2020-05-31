@@ -5,16 +5,26 @@ pragma solidity >=0.4.22 <0.7.0;
 // taken straight from the Solidity docs
 // https://solidity.readthedocs.io/en/v0.5.10/solidity-by-example.html?highlight=auction#id2
 // you must modify this to be compatible with the BrokerlessMarket contract
+
+/* RECORD of CHANGES as of 5/31/2020
+
+beneficiary -> landlord
+highestBidder -> tenant
+highestBid -> rent
+highestBidIncreased -> rentIncreased
+
+*/
+
 contract BrokerlessAuction {
     // Parameters of the auction. Times are either
     // absolute unix timestamps (seconds since 1970-01-01)
     // or time periods in seconds.
-    address payable public beneficiary;
+    address payable public landlord;
     uint public auctionEndTime;
 
     // Current state of the auction.
-    address public highestBidder;
-    uint public highestBid;
+    address public tenant;
+    uint public rent;
 
     // Allowed withdrawals of previous bids
     mapping(address => uint) pendingReturns;
@@ -24,7 +34,7 @@ contract BrokerlessAuction {
     bool public ended;
 
     // Events that will be emitted on changes.
-    event HighestBidIncreased(address bidder, uint amount);
+    event rentIncreased(address bidder, uint amount);
     event AuctionEnded(address winner, uint amount);
 
     // The following is a so-called natspec comment,
@@ -34,12 +44,12 @@ contract BrokerlessAuction {
 
     /// Create a simple auction with `_biddingTime`
     /// seconds bidding time on behalf of the
-    /// beneficiary address `_beneficiary`.
+    /// landlord address `_landlord`.
     constructor(
         uint _biddingTime,
-        address payable _beneficiary
+        address payable _landlord
     ) public {
-        beneficiary = _beneficiary;
+        landlord = _landlord;
         auctionEndTime = now + _biddingTime;
     }
 
@@ -64,26 +74,26 @@ contract BrokerlessAuction {
         // If the bid is not higher, send the
         // money back.
         require(
-            msg.value > highestBid,
+            msg.value > rent,
             "There already is a higher bid."
         );
         require(!ended, "Auction ended. See you next time!");
 
-        // only allows the beneficiary to end the auction
-        require(msg.sender == beneficiary, "Become a beneficiary to be eligible.");
+        // only allows the landlord to end the auction
+        require(msg.sender == landlord, "Become a landlord to be eligible.");
 
 
-        if (highestBid != 0) {
+        if (rent != 0) {
             // Sending back the money by simply using
-            // highestBidder.send(highestBid) is a security risk
+            // tenant.send(rent) is a security risk
             // because it could execute an untrusted contract.
             // It is always safer to let the recipients
             // withdraw their money themselves.
-            pendingReturns[highestBidder] += highestBid;
+            pendingReturns[tenant] += rent;
         }
-        highestBidder = msg.sender;
-        highestBid = msg.value;
-        emit HighestBidIncreased(msg.sender, msg.value);
+        tenant = msg.sender;
+        rent = msg.value;
+        emit rentIncreased(msg.sender, msg.value);
     }
 
     /// Withdraw a bid that was overbid.
@@ -109,7 +119,7 @@ contract BrokerlessAuction {
     }
 
     /// End the auction and send the highest bid
-    /// to the beneficiary.
+    /// to the landlord.
     function auctionEnd() public {
         // It is a good guideline to structure functions that interact
         // with other contracts (i.e. they call functions or send Ether)
@@ -127,15 +137,15 @@ contract BrokerlessAuction {
         // 1. Conditions
         require(now >= auctionEndTime, "Auction not yet ended.");
         require(!ended, "auctionEnd has already been called.");
-        // only allows the beneficiary to end the auction
-        require(msg.sender == beneficiary, "Become a beneficiary to be authorized.");
+        // only allows the landlord to end the auction
+        require(msg.sender == landlord, "Become a landlord to be authorized.");
 
         // 2. Effects
         ended = true;
-        emit AuctionEnded(highestBidder, highestBid);
+        emit AuctionEnded(tenant, rent);
 
         // 3. Interaction
-        beneficiary.transfer(highestBid);
+        landlord.transfer(rent);
     }
 }
 

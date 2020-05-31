@@ -1,16 +1,34 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.4.22 <0.7.0;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/ownership/Ownable.sol";
 import './BrokerlessAuction.sol';
 
+/*
+CHANGES as of 5/31/2020
+Questions:
+1. who should initiate the contract/bidding process (initiator <-> Foundation)
+foundationAddress = landlord
+*/
+
+/* RECORD of CHANGES as of 5/31/2020
+
+from BrokerlessAuction.sol
+
+beneficiary -> landlord
+highestBidder -> tenant
+highestBid -> rent
+highestBidIncreased -> rentIncreased
+
+*/
+
 contract BrokerlessMarket is ERC721Full, Ownable {
-    constructor() ERC721Full("BrokerlessMarket", "MARS") public {}
+    constructor() ERC721Full("BrokerlessMarket", "NYC") public {}
 
     // cast a payable address for the DoorKeeBrokerless Development Foundation to be the beneficiary in the auction
     // this contract is designed to have the owner of this contract (foundation) to pay for most of the function calls
     // (all but bid and withdraw)
-    address payable foundationAddress = address(uint160(owner()));
+    address payable landlord = msg.sender;
 
     mapping(uint => BrokerlessAuction) public auctions;
 
@@ -23,15 +41,15 @@ contract BrokerlessMarket is ERC721Full, Ownable {
 
     function createAuction(uint tokenId) public onlyOwner {
        // initiate new auctions
-        auctions[tokenId] = new BrokerlessAuction(foundationAddress);
-        }
+        auctions[tokenId] = new BrokerlessAuction(now, landlord);
+    }
 
     function endAuction(uint tokenId) public onlyOwner {
         require(_exists(tokenId), "Land not registered!");
         BrokerlessAuction auction = getAuction(tokenId);
         // End auction and transfer land from the owner to verified highest bidder safely
         auction.auctionEnd();
-        safeTransferFrom(owner(), auction.highestBidder(), tokenId);
+        safeTransferFrom(owner(), auction.tenant(), tokenId);
     }
 
     function getAuction(uint tokenId) public view returns(BrokerlessAuction auction) {
@@ -46,11 +64,11 @@ contract BrokerlessMarket is ERC721Full, Ownable {
         return auction.ended();
      }
 
-    function highestBid(uint tokenId) public view returns(uint) {
+    function rent(uint tokenId) public view returns(uint) {
        // Require existing tokenID to prevent lossing ether 
         require(_exists(tokenId), "Unregistered Please double check your token ID.");    
         BrokerlessAuction auction = getAuction(tokenId);
-        return auction.highestBid();
+        return auction.rent();
     }
 
     function pendingReturn(uint tokenId, address sender) public view returns(uint) {
