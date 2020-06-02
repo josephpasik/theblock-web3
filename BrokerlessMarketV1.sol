@@ -2,7 +2,7 @@ pragma solidity >=0.4.22 <0.7.0;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/ownership/Ownable.sol";
-import './BrokerlessAuction.sol';
+import './BrokerlessAuctionV1.sol';
 
 /*
 CHANGES as of 5/31/2020
