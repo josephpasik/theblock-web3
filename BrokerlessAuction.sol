@@ -57,6 +57,8 @@ contract BrokerlessAuction {
     /// together with this transaction.
     /// The value will only be refunded if the
     /// auction is not won.
+    
+    //function bid() public payable {
     function bid(address payable sender) public payable {
         // No arguments are necessary, all
         // information is already part of
@@ -91,7 +93,8 @@ contract BrokerlessAuction {
             // withdraw their money themselves.
             pendingReturns[tenant] += rent;
         }
-        tenant = msg.sender;
+        //tenant = msg.sender;
+        tenant = sender;
         rent = msg.value;
         emit rentIncreased(msg.sender, msg.value);
     }
