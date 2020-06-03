@@ -1,5 +1,8 @@
-pragma solidity >=0.4.22 <0.7.0;
+pragma solidity ^0.5.0;
 // pragma experimental ABIEncoderV2; enable experimental features (required for returning structs)
+
+//import "./Deposit.sol";
+//import "./BrokerlessAuction.sol";
 
 contract Lease {
 
@@ -8,27 +11,29 @@ contract Lease {
     // uint public showingfee;
     uint public showingfeepercent;
     uint servicefeepercent;
+    
+    uint public firstpayment;
+    
     /* Combination of zip code, building number, and apt number*/
     string public apt;
 
     address payable public landlord;
     address payable public tenant;
     address payable public us;
+    address payable public consolidatedDeposits;
 //    address payable public next;
     address payable public previous; // the CONTRACT address of the previous contract
+    address payable public depositcontract;
+    
+//    BrokerlessAuction auction;
     
     
     enum State {Created, Started, Terminated}
     State public state;
 
-    constructor(
-        uint _rent, 
-        uint _deposit, 
-        string memory _apt, 
-        uint _servicefeepercent, 
-        uint _showingfeepercent ) 
-        public { 
-        // made into constructor
+    /* contructor */
+/*
+    constructor(uint _rent, uint _deposit, string memory _apt, uint _servicefeepercent, uint _showingfeepercent ) public {
         rent = _rent;
         deposit = _deposit;
         apt = _apt;
@@ -36,10 +41,19 @@ contract Lease {
         servicefeepercent = _servicefeepercent;
         showingfeepercent = _showingfeepercent;
     }
-//    modifier require(bool _condition) {
-//        if (!_condition) throw;
-//        _;
-//    }
+*/
+  
+    /* test constructor */
+     constructor() public {
+        rent = 1 ether;
+        deposit = 1 ether;
+        apt = "foo";
+        us = msg.sender;
+        servicefeepercent = 5;
+        showingfeepercent = 25;
+    }
+    
+    /* modifiers */
     modifier onlyLandlord() {
         require(landlord == msg.sender, "You must be the landlord to perform this function.");
         _;
@@ -53,16 +67,12 @@ contract Lease {
         require(us == msg.sender, "You must be the service provider to perform this function.");
         _;
     }
-    
     modifier inState(State _state) {
         require(state == _state, "This contract is not active.");
         _;
     }
 
-    /* We also have some getters so that we can read the values
-    from the blockchain at any time */
-    // added public to each function
-      
+    /* getters */
 /*    
     function getPaidRents() public returns (PaidRent[] memory) { // had to turn on experimental features to return struct
         return paidrents;
@@ -98,6 +108,7 @@ contract Lease {
 */
 
     /* Events for DApps to listen to */
+    
     event landlordConfirmed();
     
     event tenantConfirmed();
@@ -111,119 +122,111 @@ contract Lease {
     event paidShowingFee();
 
     event contractTerminated();
-
-    /* Confirm the lease agreement as tenant*/
-   function confirmAgreementlandlord() public
-    // inState(State.Created)
+    
+    /* Confirm the lease agreement as landlord*/
+    function landlordConfirm() public
+    inState(State.Created) // landlord and tenant can not be changed when both are confirmed
     {
-        require(msg.sender != tenant || msg.sender != us); // moved into function
-        emit landlordConfirmed(); // added emit
+        require(msg.sender != tenant && msg.sender != us, "You are not the landlord.");
+        emit landlordConfirmed();
         landlord = msg.sender;
-        state = State.Started;
+        // sets state to started when BOTH landlord and tenant confirm (only if the other is not an empty address)
+        if (tenant != 0x0000000000000000000000000000000000000000) {
+            state = State.Started;
+        }
     }
    
-   
-    function confirmAgreementtenant() public
-    // inState(State.Created)
+    /* Confirm the lease agreement as tenant*/
+    function tenantConfirm() public
+    inState(State.Created)
     {
-        require(msg.sender != landlord || msg.sender != us); // moved into function
-        emit tenantConfirmed(); // added emit
+        require(msg.sender != landlord && msg.sender != us, "You are not the tenant.");
+        emit tenantConfirmed();
         tenant = msg.sender;
-        state = State.Started;
+        if (landlord != 0x0000000000000000000000000000000000000000) {
+            state = State.Started;
+        }
     }
-
-// State started should be when both parties agree to the confirm
 
     function setPrevious(address payable _previous) public payable
-    onlyLandlord
+//    onlyUs
     inState(State.Started)
     {
         previous = _previous;
     }
     
-    function payFirstRent() public payable
-    onlyTenant
+    function initialPayout() public payable // can functions be made automatically called when a state is activated?
+//    onlyUs
     inState(State.Started)
     {
-        require(msg.value == rent); // moved into function
-        emit paidRent(); // added emit
-        previous.transfer(msg.value * showingfeepercent/100); // to previous contract to pay showingfee
-        landlord.transfer(msg.value - (msg.value * showingfeepercent/100) - (msg.value * servicefeepercent/100));
-        us.transfer(msg.value * servicefeepercent/100);
-        
+        require(previous != 0x0000000000000000000000000000000000000000, "Please set previous contract address.");
+        firstpayment = address(this).balance;
+        previous.transfer(firstpayment * showingfeepercent/100); // to previous contract to pay showingfee
+        landlord.transfer(firstpayment - (firstpayment * showingfeepercent/100) - (firstpayment * servicefeepercent/100));
+        us.transfer(firstpayment * servicefeepercent/100);
     }
-
-
     
     function payRent() public payable
     onlyTenant
     inState(State.Started)
     {
-        require(msg.value == rent); // moved into function
-        emit paidRent(); // added emit
-        landlord.transfer(msg.value); // changed send to transfer
-        //uint total;
+        require(msg.value == rent);
+        emit paidRent();
+        landlord.transfer(msg.value);
     }
     
+    function setDepositContract(address payable _depositcontract) public payable
+//    onlyUs
+    {
+        depositcontract = _depositcontract;
+    }
+
     function payDeposit() public payable
     onlyTenant
-    inState(State.Started)
+//    inState(State.Started)
     /// need to make it so that it can only be paid once
     {
         require(msg.value == deposit);
         emit paidDeposit();
+        depositcontract.transfer(msg.value);
     }
     
-    function returnDeposit(uint amount) public
-    onlyLandlord
+    function requestDeposit() public payable
+    onlyTenant
     inState(State.Started)
     {
-        require(amount == deposit, "Please return the full security deposit");
+        require(msg.value == deposit);
         emit returnedDeposit();
-        tenant.transfer(amount);
-    }
-  
-///        require(unlock_time < now, "Account is locked"); 
-///
-///        if (amount > address(this).balance / 3) {
-///            unlock_time = now + 24 hours;
-///        }
-    
-/*    
-    function payShowingFee() public payable
-    onlyLandlord
-    inState(State.Started)
-    {
-        require(msg.value == showingFee);
-        emit paidShowingFee();
         tenant.transfer(msg.value);
     }
-*/    
-    // OR
+    
+    function returnDeposit() public payable
+    onlyUs
+    inState(State.Started)
+    {
+        require(msg.value == deposit);
+        emit returnedDeposit();
+        tenant.transfer(msg.value);
+    }
     
     function requestShowingFee() public
     onlyTenant
-    inState(State.Started) //make so that this refers to the next tenant's contract
+    inState(State.Started) // how can we make it so that this refers to the next tenant's contract?
     {
         emit paidShowingFee();
-        tenant.transfer(rent / 2);
+//        tenant.transfer(); // transfer showing fee from next contract
     }
-    
-    /* Terminate the contract so the tenant can’t pay rent anymore,
-    and the contract is terminated */
+
     function terminateContract() public
     onlyLandlord
     {
         // require event: paidDeposit to be true and paidrents to = rent *12
         emit contractTerminated();
-        landlord.transfer(address(this).balance); //changed to address.this -- changed to transfer
-        /* If there is any value on the
-               contract send it to the landlord*/
         state = State.Terminated;
     }
     
     function getbalance() public view returns (uint) {
         return address(this).balance;
     }
-    function () payable external {} // required so that the next contract can pay this contract
+    function () payable external {} // required so that this contract can be payable
 }

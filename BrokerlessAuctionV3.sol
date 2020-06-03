@@ -1,26 +1,8 @@
-// BrokerlessAuction
-
 pragma solidity >=0.4.22 <0.7.0;
 
-// taken straight from the Solidity docs
-// https://solidity.readthedocs.io/en/v0.5.10/solidity-by-example.html?highlight=auction#id2
-// you must modify this to be compatible with the BrokerlessMarket contract
-
-/* RECORD of CHANGES as of 5/31/2020
-
-beneficiary -> landlord
-highestBidder -> tenant
-highestBid -> rent
-highestBidIncreased -> rentIncreased
-
-*/
-
 contract BrokerlessAuction {
-    // Parameters of the auction. Times are either
-    // absolute unix timestamps (seconds since 1970-01-01)
-    // or time periods in seconds.
+    
     address payable public landlord;
-    uint public auctionEndTime;
     
     address payable public contractaddress;
 
@@ -31,10 +13,6 @@ contract BrokerlessAuction {
     // Allowed withdrawals of previous bids
     mapping(address => uint) pendingReturns;
 
-    // Set to true at the end, disallows any change.
-    // By default initialized to `false`.
-    bool public ended;
-
     // Events that will be emitted on changes.
     event rentIncreased(address bidder, uint amount);
     event AuctionEnded(address winner, uint amount);
@@ -44,52 +22,40 @@ contract BrokerlessAuction {
     // It will be shown when the user is asked to
     // confirm a transaction.
 
-    /// Create a simple auction with `_biddingTime`
-    /// seconds bidding time on behalf of the
-    /// landlord address `_landlord`.
-    constructor(
-        uint _biddingTime,
-        address payable _landlord
-    ) public {
-        landlord = _landlord;
-        auctionEndTime = now + _biddingTime;
-    }
+    enum State {Started, Terminated}
+    State public state;
 
+    /// Create a simple auction on behalf of the landlord address `_landlord`.
+    constructor() public {
+        landlord = msg.sender;
+        state = State.Started;
+    }
+    
+    /* modifiers */
+    modifier inState(State _state) {
+        require(state == _state, "The auction is not active.");
+        _;
+    }    
+    modifier onlyLandlord() {
+        require(landlord == msg.sender, "You must be the landlord to perform this function.");
+        _;
+    }
+    
+    /// identifies the BrokerlessContract address (instead can we have this corntact CREATE the BrokerlessContract?)
+    function setContractAddress(address payable _address) public {
+        contractaddress = _address;
+    }
+    
     /// Bid on the auction with the value sent
     /// together with this transaction.
     /// The value will only be refunded if the
     /// auction is not won.
     
-    function setContractAddress(address payable _address) public {
-        contractaddress = _address;
-    }
-    
-    //function bid() public payable {
-    function bid(address payable sender) public payable {
-        // No arguments are necessary, all
-        // information is already part of
-        // the transaction. The keyword payable
-        // is required for the function to
-        // be able to receive Ether.
-
-        // Revert the call if the bidding
-        // period is over.
-        require(
-            now <= auctionEndTime,
-            "Auction already ended."
-        );
-
-        // If the bid is not higher, send the
-        // money back.
-        require(
-            msg.value > rent,
-            "There already is a higher bid."
-        );
-        require(!ended, "Auction ended. See you next time!");
-
-        // only allows the landlord to end the auction
-//        require(msg.sender == landlord, "Become a landlord to be eligible.");
-
+    function bid() public payable
+    inState(State.Started)
+    {
+        // If the bid is not higher, send the money back.
+        require(msg.value > rent, "There already is a higher bid.");
 
         if (rent != 0) {
             // Sending back the money by simply using
@@ -100,7 +66,7 @@ contract BrokerlessAuction {
             pendingReturns[tenant] += rent;
         }
         //tenant = msg.sender;
-        tenant = sender;
+        tenant = msg.sender;
         rent = msg.value;
         emit rentIncreased(msg.sender, msg.value);
     }
@@ -123,13 +89,15 @@ contract BrokerlessAuction {
         return true;
     }
 
-    function pendingReturn(address sender) public view returns (uint) {
-        return pendingReturns[sender];
+    function pendingReturn() public view returns (uint) {
+        return pendingReturns[msg.sender];
     }
 
-    /// End the auction and send the highest bid
-    /// to the landlord.
-    function auctionEnd() public {
+    /// End the auction and send the highest bid to the BrokerlessContract.
+    function auctionEnd() public
+    inState(State.Started)
+    onlyLandlord
+    {
         // It is a good guideline to structure functions that interact
         // with other contracts (i.e. they call functions or send Ether)
         // into three phases:
@@ -143,14 +111,10 @@ contract BrokerlessAuction {
         // contracts, they also have to be considered interaction with
         // external contracts.
 
-        // 1. Conditions
-//        require(now >= auctionEndTime, "Auction not yet ended.");
-        require(!ended, "auctionEnd has already been called.");
-        // only allows the landlord to end the auction
-        require(msg.sender == landlord, "Become a landlord to be authorized.");
+        // 1. Conditions as modifiers
 
         // 2. Effects
-        ended = true;
+        state = State.Terminated;
         emit AuctionEnded(tenant, rent);
 
         // 3. Interaction

@@ -1,86 +1,264 @@
-
 pragma solidity ^0.5.0;
+// pragma experimental ABIEncoderV2; enable experimental features (required for returning structs)
 
-//import "./BrokerlessContract.sol";
+import "./Deposit.sol";
 
+contract Lease {
 
- //will take from the pool and allocate to a deposit that is consolidated and yields a higher retunr from banks
-contract interestAdvantage {
-    address payable landlord; //landlords collection account
-    address payable tenant;
-    address payable us; 
-    
-    uint baseInterest;
-    uint enhancedSpread;
-    uint tenantSplit; //share of spread going to tenant
-    uint landlordSplit; //share of spread going to landlord
-    uint usFee; //share of spread for our fees
-    uint amount; //pooled security deposits
-    
-constructor (uint baseInterest, uint enhancedSpread, uint usFee, uint landlordSplit, uint tenantSplit) public {
-    
-    baseInterest = _baseInterest;
-    enhancedSpread = _enhancedSpread;
-    usFee = _usFee;
-    landlordSplit = _landlordSplit;
-    tenantSplit = _tenantSplit;
-    
-    
-}
+    uint public rent;
+    uint public deposit;
+    // uint public showingfee;
+    uint public showingfeepercent;
+    uint servicefeepercent;
+    /* Combination of zip code, building number, and apt number*/
+    string public apt;
 
-//modifier onlyUs() {
-//        require(us == msg.sender, "You must be the service provider to perform this function.");
+    address payable public landlord;
+    address payable public tenant;
+    address payable public us;
+    address payable public consolidatedDeposits;
+//    address payable public next;
+    address payable public previous; // the CONTRACT address of the previous contract
+    address payable public depositcontract;
+    
+    
+    enum State {Created, Started, Terminated}
+    State public state;
+
+    constructor(uint _rent, uint _deposit, string memory _apt, uint _servicefeepercent, uint _showingfeepercent ) public { // made into constructor
+        rent = _rent;
+        deposit = _deposit;
+        apt = _apt;
+        us = msg.sender;
+        servicefeepercent = _servicefeepercent;
+        showingfeepercent = _showingfeepercent;
+    }
+//    modifier require(bool _condition) {
+//        if (!_condition) throw;
 //        _;
 //    }
-
-//mapping(address=uint) tenantAccount;  //maps specific deposit to specific tenant 
-
-function getBalnce() public view returns(uint) {
-        
-    } // gives the total deposit balance in the contract
-
-function payParties() public {
-     uint distributionPool = amount * (enhancedSpread - baseInterest); // Your code here!
-
-        // @TODO: Transfer the amount to each employee
-        tenant.transfer(amount * tenantSplit);
-        landlord.transfer(amount * landlordSplit);
-        us.transfer(amount * usFee);
-}
-
-function returnSecurity() public {
-  //  require(onlyUs and onlyLandlord)
-    uint tenantSecurity = amount * baseInterest;
+    modifier onlyLandlord() {
+        require(landlord == msg.sender, "You must be the landlord to perform this function.");
+        _;
+    }
+    modifier onlyTenant() {
+        require(tenant == msg.sender, "You must be the tenant to perform this function.");
+        _;
+    }
     
-    tenant.transfer(tenantSecurity);
-}
+    modifier onlyUs() {
+        require(us == msg.sender, "You must be the service provider to perform this function.");
+        _;
+    }
+    
+    modifier inState(State _state) {
+        require(state == _state, "This contract is not active.");
+        _;
+    }
 
- 
+    /* We also have some getters so that we can read the values
+    from the blockchain at any time */
+    // added public to each function
+      
+/*    
+    function getPaidRents() public returns (PaidRent[] memory) { // had to turn on experimental features to return struct
+        return paidrents;
+    }
 
-}
+    function getApt() public view returns (string memory) {
+        return apt;
+    }
 
+    function getLandlord() public view returns (address) {
+        return landlord;
+    }
 
+    function getTenant() public view returns (address) {
+        return tenant;
+    }
 
+    function getRent() public view returns (uint) {
+        return rent;
+    }
 
-/*This agreement governs the management of the security deposits made by the tenants for the rental of their property. The security
-deposits will be pooled together to form a security deposit fund. Management of the fund will be outsourced to a professional manager
-with no management fee but a success fee with a guarantee on the principal amount (FDIC insured). 
+    function getContractCreated() public view returns (uint) {
+        return createdTimestamp;
+    }
 
-Tenant deposits security into contract
-Parties to the agreemen: Us, Owner, Tenant and Advisor
+    function getContractAddress() public view returns (address) {
+        return address(this);
+    }
 
-Need to have:
-1. Date for open and close of the contract that is tied to the brokerlesscontract
-2. Security amount that is consolidated from other contracts that are created. Maybe a function that takes an input in the form
-of the contract numbers and adds them together
-3. Need a split for the benefit of the additional interest that is returned
-4. Need a function to return the deposit or offer an opportunity to renew the agreement
-5. Do we need a function that takes into consideration the base amount plus interest separately so we can distribut the earnings
-between the Parties
-6. Us and Owner should be capped at the amount of fees with upside going to Tenant mainly and some to the investment manager with
-a higher cap then Us and Owner
-7. Participants to select their investment strategy
-8. How much will you allocate to the pool from the deposit
-9. Contract with security deposit should have the option built in it to dedicate to investment (maybe owner will have a max 
-investment amount)
+    function getState() public returns (State) {
+        return state;
+    }
 */
+
+    /* Events for DApps to listen to */
+    event landlordConfirmed();
+    
+    event tenantConfirmed();
+
+    event paidRent();
+    
+    event paidDeposit();
+    
+    event returnedDeposit();
+    
+    event paidShowingFee();
+
+    event contractTerminated();
+
+    /* Confirm the lease agreement as tenant*/
+    function confirmAgreementlandlord() public
+    inState(State.Created)
+    {
+        require(msg.sender != tenant || msg.sender != us); // moved into function
+        emit landlordConfirmed(); // added emit
+        landlord = msg.sender;
+        // make sure not already set
+        // if tenant is not null set to state started
+        state = State.Started;
+    }
+   
+   
+    function confirmAgreementtenant() public
+    inState(State.Created)
+    {
+        require(msg.sender != landlord || msg.sender != us); // moved into function
+        emit tenantConfirmed(); // added emit
+        tenant = msg.sender;
+        state = State.Started;
+    }
+
+// State started should be when both parties agree to the confirm
+
+    function setPrevious(address payable _previous) public payable
+    onlyLandlord
+    inState(State.Started)
+    {
+        previous = _previous;
+    }
+    
+    function setDepositContract(address payable _depositcontract) public payable
+    onlyUs
+    {
+        depositcontract = _depositcontract;
+    }
+    
+    function payFirstRent() public payable
+    onlyTenant
+    inState(State.Started)
+    {
+        require(msg.value == rent); // moved into function
+        emit paidRent(); // added emit
+        previous.transfer(msg.value * showingfeepercent/100); // to previous contract to pay showingfee
+        landlord.transfer(msg.value - (msg.value * showingfeepercent/100) - (msg.value * servicefeepercent/100));
+        us.transfer(msg.value * servicefeepercent/100);
+        
+    }
+
+
+    
+    function payRent() public payable
+    onlyTenant
+    inState(State.Started)
+    {
+        require(msg.value == rent); // moved into function
+        emit paidRent(); // added emit
+        landlord.transfer(msg.value); // changed send to transfer
+        //uint total;
+    }
+/*    
+    function payDeposit() public payable
+    onlyTenant
+    inState(State.Started)
+    /// need to make it so that it can only be paid once
+    {
+        require(msg.value == deposit);
+        emit paidDeposit();
+        consolidatedDeposits = 0xAd7ec4E051d8A2cCc99A463B7c88D9eb791682D2;
+        consolidatedDeposits.transfer(msg.value);
+    }
+    
+    function returnDeposit(uint amount) public
+    onlyLandlord
+    inState(State.Started)
+    {
+        require(amount == deposit, "Please return the full security deposit");
+        emit returnedDeposit();
+        tenant.transfer(amount);
+    }
+*/    
+    function payDeposit() public payable
+    onlyTenant
+//    inState(State.Started)
+    /// need to make it so that it can only be paid once
+    {
+        require(msg.value == deposit);
+        emit paidDeposit();
+        depositcontract.transfer(msg.value);
+    }
+    
+    function requestDeposit() public payable
+    onlyTenant
+    inState(State.Started)
+    {
+        require(msg.value == deposit);
+        emit returnedDeposit();
+        tenant.transfer(msg.value);
+    }
+    
+    function returnDeposit() public payable
+    onlyUs
+    inState(State.Started)
+    {
+        require(msg.value == deposit);
+        emit returnedDeposit();
+        tenant.transfer(msg.value);
+    }
+  
+///        require(unlock_time < now, "Account is locked"); 
+///
+///        if (amount > address(this).balance / 3) {
+///            unlock_time = now + 24 hours;
+///        }
+    
+/*    
+    function payShowingFee() public payable
+    onlyLandlord
+    inState(State.Started)
+    {
+        require(msg.value == showingFee);
+        emit paidShowingFee();
+        tenant.transfer(msg.value);
+    }
+*/    
+    // OR
+    
+    function requestShowingFee() public
+    onlyTenant
+    inState(State.Started) //make so that this refers to the next tenant's contract
+    {
+        emit paidShowingFee();
+        tenant.transfer(rent / 2);
+    }
+    
+    /* Terminate the contract so the tenant can’t pay rent anymore,
+    and the contract is terminated */
+    function terminateContract() public
+    onlyLandlord
+    {
+        // require event: paidDeposit to be true and paidrents to = rent *12
+        emit contractTerminated();
+        landlord.transfer(address(this).balance); //changed to address.this -- changed to transfer
+        /* If there is any value on the
+               contract send it to the landlord*/
+        state = State.Terminated;
+    }
+    
+    function getbalance() public view returns (uint) {
+        return address(this).balance;
+    }
+    function () payable external {} // required so that the next contract can pay this contract
+}
