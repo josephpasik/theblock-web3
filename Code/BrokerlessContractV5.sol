@@ -12,8 +12,6 @@ contract Lease {
     uint public showingfeepercent;
     uint servicefeepercent;
     
-    uint public firstpayment;
-    
     /* Combination of zip code, building number, and apt number*/
     string public apt;
 
@@ -23,7 +21,7 @@ contract Lease {
     address payable public consolidatedDeposits;
 //    address payable public next;
     address payable public previous; // the CONTRACT address of the previous contract
-    address payable public depositcontract;
+    address payable public omnibusAddress;
     
 //    BrokerlessAuction auction;
     
@@ -44,9 +42,8 @@ contract Lease {
 */
   
     /* test constructor */
-     constructor() public {
-        rent = 1 ether;
-        deposit = 1 ether;
+    constructor() public {
+        deposit = 1 ether; //should be taken from auction contract
         apt = "foo";
         us = msg.sender;
         servicefeepercent = 5;
@@ -160,27 +157,28 @@ contract Lease {
     inState(State.Started)
     {
         require(previous != 0x0000000000000000000000000000000000000000, "Please set previous contract address.");
-        firstpayment = address(this).balance;
-        previous.transfer(firstpayment * showingfeepercent/100); // to previous contract to pay showingfee
-        landlord.transfer(firstpayment - (firstpayment * showingfeepercent/100) - (firstpayment * servicefeepercent/100));
-        us.transfer(firstpayment * servicefeepercent/100);
+        rent = address(this).balance; // should be getting rent from auction contract
+        previous.transfer(rent * showingfeepercent/100); // to previous contract to pay showingfee
+        landlord.transfer(rent - (rent * showingfeepercent/100) - (rent * servicefeepercent/100));
+        us.transfer(rent * servicefeepercent/100);
     }
     
     function payRent() public payable
     onlyTenant
     inState(State.Started)
     {
-        require(msg.value == rent);
+        require(msg.value == rent, "Please pay the proper rent.");
         emit paidRent();
         landlord.transfer(msg.value);
     }
     
-    function setDepositContract(address payable _depositcontract) public payable
+    function setOmnibusContract(address payable _omnibus) public payable
 //    onlyUs
     {
-        depositcontract = _depositcontract;
+        omnibusAddress = _omnibus;
     }
 
+/*
     function payDeposit() public payable
     onlyTenant
 //    inState(State.Started)
@@ -188,18 +186,17 @@ contract Lease {
     {
         require(msg.value == deposit);
         emit paidDeposit();
-        depositcontract.transfer(msg.value);
+        omnibusAddress.transfer(msg.value);
     }
-    
-    function requestDeposit() public payable
-    onlyTenant
-    inState(State.Started)
-    {
-        require(msg.value == deposit);
-        emit returnedDeposit();
-        tenant.transfer(msg.value);
+*/
+
+    function requestDeposit() external {
+        Omnibus omnibus = Omnibus(omnibusAddress);
+        omnibus.releaseDeposit(tenant, deposit);
+        
     }
-    
+
+/*    
     function returnDeposit() public payable
     onlyUs
     inState(State.Started)
@@ -208,7 +205,7 @@ contract Lease {
         emit returnedDeposit();
         tenant.transfer(msg.value);
     }
-    
+*/
     function requestShowingFee() public
     onlyTenant
     inState(State.Started) // how can we make it so that this refers to the next tenant's contract?
@@ -229,4 +226,29 @@ contract Lease {
         return address(this).balance;
     }
     function () payable external {} // required so that this contract can be payable
+}
+
+
+contract Omnibus {
+    
+    address payable tenant;
+    uint deposit;
+    uint interestRate;
+    
+    constructor(uint _interestRate) public {
+        interestRate = _interestRate/1000;
+    }
+    
+    function releaseDeposit(address payable _tenant, uint _deposit) public
+    {
+        tenant = _tenant;
+        deposit = _deposit;
+        tenant.transfer(deposit);
+    }
+    
+    function getbalance() public view returns (uint) {
+        return address(this).balance;
+    }
+    
+    function () payable external {}
 }
