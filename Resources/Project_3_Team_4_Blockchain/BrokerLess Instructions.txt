@@ -1,0 +1,28 @@
+Step 1:
+* As Landlord deploys Auction contract 
+* As Us deploy Lease contract
+* As Us deploy the Omnibus contract
+
+** Insert bank interest 5%
+
+* Set leaseAddress contract
+* Set omnibusAddress contract
+* As potentialTenant 1 enter bid Value and split Value between 
+  rent percent and deposit percent
+* As potentialTenant 2 enter higher bid Value and split Value
+  between rent percent and deposit percent
+* As potentialTenant 1 withdraw bid to get back money
+* As Landlord end auction and accept highest bid. Resulting in the rent being transferred
+  to lease contract and deposit gets transferred to the Omnibus contract
+
+** Navigate to the Lease contract. As Landlord confirm lease contract
+** As Tenant confirm lease contract
+
+* Set Omnibus contract
+* Set Previous contract
+* Click initialPayout
+* Rent payment is transferred to Landlord and Previous Tenant for showing
+ the house and Us for offering the platform
+** In the Previous Tenant Agreement set 
+* Click PayRent 
+* After duration press requestDeposit

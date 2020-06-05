@@ -6,6 +6,9 @@ pragma solidity ^0.5.0;
 
 contract Lease {
 
+    // use SafeMath to streamline workflow
+    using SafeMath for uint;
+
     uint public rent;
     uint public deposit;
     // uint public showingfee;
