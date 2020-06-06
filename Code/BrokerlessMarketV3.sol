@@ -17,7 +17,8 @@ highestBidIncreased -> rentIncreased
 
 contract BrokerlessAuction {
 
-    using SafeMath for uint;
+    // use SafeMath 
+ //   using SafeMath for uint;
 
     // Parameters of the auction. Times are either
     // absolute unix timestamps (seconds since 1970-01-01)
