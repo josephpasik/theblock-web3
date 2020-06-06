@@ -1,0 +1,23 @@
+[
+	{
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "_omnibusAddress",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "generateFunds",
+		"outputs": [],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	}
+]
