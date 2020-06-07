@@ -42,9 +42,16 @@ In this project, we are helping you break free from broker hassles. Our distribu
 
 ---
 # Workflow
-## _Theory standing on shoulders of giants_
+
+## Standing on shoulders of giants
+<details><summary>
+LEASEHOLD: token distribution of smart contracts on rental lease
+</summary>
+
 ![leasehold_token](Resources/Images/leasehold_token.png)
 _Source: [Leasehold Token - The Decentralized Money Making Through Sort Term Rental Tokenization](https://steemit.com/blockchain/@kurniawan05/leasehold-token-the-decentralized-money-making-through-sort-term-rental-tokenization)_
+
+</details>
 
 ## Step-by-step Guide
 
@@ -80,6 +87,8 @@ Step 1:
 
 ```
 
+
+
 ## Contracts
 
 ## Events
@@ -93,14 +102,85 @@ Step 1:
 ---
 # Results
 
+## Frontend
+
+### Set up a Webpage on Github
+
+<details><summary>
+Step 1: Click on `Settings` on the Github repository
+</summary>
+
+![webpage_settings](Resources/Images/webpage_settings.png)
+
+</details>
+
+<details><summary>
+Step 2: On Github Pages, select `master branch ` as `Source` and select a theme under `Theme Chooser`
+</summary>
+
+![webpage_githubpages](Resources/Images/webpage_githubpages.png)
+
+</details>
+
+<details><summary>
+Step 3: Open the link to the webpage published highlighted in green to view this page
+</summary>
+
+![webpage_link](Resources/Images/webpage_link.png)
+
+</details>
+
+<details><summary>
+Step 4: Click on the link `here` under Demo App from the previous step to bid on BrokerlessMarket 
+</summary>
+
+![webpage](Resources/Images/webpage.png)
+
+</details>
+
 
 
 ---
 # Next Steps
 
+Duration of contract
+Auction contract should create brokerless contract. Or contract factory for may empty lease contracts to exist in waiting. 
+Vetting with machine learning
+Invest deposit with machine learning
+Add damage report for landlord, require picture submission, allow withdrawal of deposit funds
+Rather than auction process, bidders should offer rent and deposit fee. Landlord should be able to choose which to accept. Landlord to set minimum.
+Add “paper” contract as URI
+Allow tenants to offer a higher security deposit that the landlord is allowed to invest (전세) -> more security for the landlord (better tenants)
+Link with property listing platform
+Late fee (require payRent function even month)
+Events in place for javascript Dapps to listen to. For user friendly UI
 
 ---
 # Files
+
+### _**[Presentation](https://docs.google.com/presentation/d/1XqKJcWhoMMr_Lb58diU3U4TdTR0wG6HT/edit#slide=id.p6)**_
+
+---
+
+## **Solidity**
+
+### **[Brokerless Contract](Code/Brokerless.sol)**
+### **[Bank Contract](Code/BankInterestGenerator.sol)**
+
+---
+## Frontend dApps
+**[BrokerlessMarket Frontend Webpage](Code/frontend_test)**
+
+**[dApps for Property Records](Code/py_dApp)**
+
+---
+## _Supplementary_
+
+_[Google Drive and Slack Resources](Resources/GoogleSlack)_
+
+_[Images](Resources/Images)_
+
+
 
 
 
