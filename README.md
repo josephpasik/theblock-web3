@@ -9,24 +9,24 @@ In this project, we are helping you break free from broker hassles. Our distribu
 
 |       Party        |    Address     |               Interpretation                 |
 |--------------------|----------------|----------------------------------------------|
-|          Landlord  |   `landlord`   |   crypto wallet of the landloard             |
-|          Tenant    |   `tenant`     |  wallet address of the candidate tenant      |
+|          Landlord  |   `landlord`   | crypto wallet of the landloard               |
+|          Tenant    |   `tenant`     | wallet address of the candidate tenant       |
 |  Previous Tenant   |   `previous`   | wallet address of the previous tenant leaving|
 |            Us      |     `us`       | our crypto wallet address                    |
-|          Bank      |  `omnibus`     | omnibus bank wallet address                  |
+
 
 
 ## Escrow Account
 |     Account       |       Address                |                           Interpretation                            |
 |-------------------|------------------------------|---------------------------------------------------------------------|
-|     Omnibus       |   `_omnibusAddress`          |  wallet address of all deposits to earn interests from the bank     |
+|     Omnibus       |   `_omnibusAddress`          |  contract address of all deposits to earn interests from the bank     |
 
 
 ## Variables
 
 |       Variable          |        Code         |                           Explanation                               |
 |-------------------------|---------------------|---------------------------------------------------------------------|
-|          Rent           |        `rent`       |  monthly rent for bidding                                           |
+|      Rent               |        `rent`       |  monthly rent for bidding                                           |
 |      Deposit            |       `deposit`     |  deposit from the higher bidder, equivalent to one-month rent       |
 |      showingfeepercent  | `showingfeepercent` |  percent of rent for showing the property to candidate tenants      |
 |      servicefeepercent  | `servicefeepercent` |  as a percent of monthly rent                                       |
