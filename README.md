@@ -380,7 +380,9 @@ Bank:
 0xBb2e65E2d7664E51A1547767d502169591642491
 ```
 </details>
+
 ---
+
 ### _Demo Transactions_
 
 ### _**Initiate Lease Contract**_
