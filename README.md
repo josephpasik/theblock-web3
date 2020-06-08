@@ -1,6 +1,5 @@
 # **GO BROKERLESS!**
-# _Free of Concern_
-## _"Libre de preocupación"_ 
+## _**Free of Concern** ["Libre de preocupación"](https://www.youtube.com/watch?v=gGY5yAQtaSg)_ 
 
 ---
 # Overview
@@ -13,13 +12,15 @@ In this project, we are helping you break free from broker hassles. Our distribu
 |          Landlord  |   `landlord`   |   crypto wallet of the landloard             |
 |          Tenant    |   `tenant`     |  wallet address of the candidate tenant      |
 |  Previous Tenant   |   `previous`   | wallet address of the previous tenant leaving|
-|            Us      |      `us`      | our crypto wallet address                    |
+|            Us      |     `us`       | our crypto wallet address                    |
+|          Bank      |  `omnibus`     | omnibus bank wallet address                  |
 
-## Escrow Accounts
-|          Party        |       Address                |                           Interpretation                            |
-|-----------------------|------------------------------|---------------------------------------------------------------------|
-|     Omnibus Tokens    |   `omnibusAddress`           |  wallet address of new crowdfunding tokens  (NFT)                   |
-|      Deposit Pool     |   `consolidatedDeposits`     |  escrow address of deposit from all parties for higher returns      |
+
+## Escrow Account
+|     Account       |       Address                |                           Interpretation                            |
+|-------------------|------------------------------|---------------------------------------------------------------------|
+|     Omnibus       |   `_omnibusAddress`          |  wallet address of all deposits to earn interests from the bank     |
+
 
 ## Variables
 
@@ -29,6 +30,7 @@ In this project, we are helping you break free from broker hassles. Our distribu
 |      Deposit            |       `deposit`     |  deposit from the higher bidder, equivalent to one-month rent       |
 |      showingfeepercent  | `showingfeepercent` |  percent of rent for showing the property to candidate tenants      |
 |      servicefeepercent  | `servicefeepercent` |  as a percent of monthly rent                                       |
+|      Apartment          | `apt`               |  a string combination of zip code, building number, and apt number  |
 
 
 
@@ -36,9 +38,303 @@ In this project, we are helping you break free from broker hassles. Our distribu
 ![erd](Resources/Images/erd.png)
 
 ---
-# Libraries in Solidity
-## [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts)
+# Blockchain Technologies
 
+### [Solidity](https://solidity.readthedocs.io/en/v0.6.9/)
+* Target Ethereum Virtual Machine (EVM), influenced by
+  * C++
+  * Python
+  * JavaScript
+  * [Auctions](https://solidity.readthedocs.io/en/v0.6.9/solidity-by-example.html?highlight=auction)
+* Extension installed in Visual Studio Code: **[Link to Github](https://github.com/juanfranblanco/vscode-solidity)**
+
+### [Web3.js](https://web3js.readthedocs.io/en/v1.2.8/)
+_See also: [Web3 on Github](https://github.com/ethereum/web3.js/)_
+
+* API in JavaScript for Ethereum
+  * libaries use HPPT or IPC to connect to nodes 
+* Use **[web3.eth](https://web3js.readthedocs.io/en/v1.2.8/web3-eth.html)** package to interact with smart contract on Ethereum blockchain
+  * _**See [ledger.py](Code/py_dApp/python/ledger.py)**_
+
+    <details><summary>
+    Python code 
+    </summary>
+
+    ```python
+    def reportApt(landlord, report_uri):
+      tx_hash = registerApt.functions.reportApt(landlord, report_uri).transact(
+          {"from": w3.eth.accounts[0]}
+      )
+      receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+      return receipt
+    ```
+
+    </details>
+
+    * _**See [record.py](Code/py_dApp/python/record.py)**_
+
+    <details><summary>
+    Code in Python
+    </summary>
+
+    ```python
+
+    def initContract():
+        with open(Path("brokerless.json")) as json_file:
+            abi = json.load(json_file)
+
+        return w3.eth.contract(address=os.getenv("REGISTERAPT_ADDRESS"), abi=abi)
+
+    ```
+
+    </details>
+
+* Report apartments through python: see **[py_dApp](Code/py_dApp)**
+  * ABI acquired from compiling Solidity smart contracts in Remix
+    * _**[brokerless.json](Code/py_dApp/python/brokerless.json)**_
+  * Environmennt setup 
+    <details><summary>
+    Need Pinata API and secret API keys in a file .env to access URIs
+    </summary>
+
+    ```
+    PINATA_API_KEY=
+    PINATA_SECRET_API_KEY=
+    WEB3_PROVIDER_URI=http://127.0.0.1:8545
+    REGISTERAPT_ADDRESS=0x
+    ```
+
+    </details>
+
+  * Next step: for landlord 
+    * Report and getting report on bidders
+    * following similar process
+  
+
+
+### [Ganache](https://www.trufflesuite.com/docs/ganache/overview)
+* Personal blockchain DApp for Ethereum development
+* Linked with MetaMask to Localhost:8545 in this project demo
+* Desktop application installed 
+
+---
+
+
+## Contracts
+
+_**Defined in [Brokerless.sol](Code/brokerless.sol)**:_
+
+* Auction
+
+<details><summary>
+Solidity code for capital distribution
+</summary>
+
+```solidity
+      // in Constructor
+        servicefeepercent = 5;
+        showingfeepercent = 25;
+
+      // within function auctionEnd() public
+      // 3. Interaction
+        rent = highestBid * rentPercent/100;
+        deposit = highestBid * depositPercent/100;
+
+      //leaseAddress.transfer(rent);
+        omnibusAddress.transfer(deposit);
+        previous.transfer(rent * showingfeepercent/100); // to previous contract to pay showingfee
+        landlord.transfer(rent - (rent * showingfeepercent/100) - (rent * servicefeepercent/100));
+        us.transfer(rent * servicefeepercent/100);
+
+```
+</details>
+
+* Lease
+
+<details><summary>
+Solidity code for deposit return
+</summary>
+
+```solidity
+
+    function returnDeposit() external 
+    onlyLandlord
+    {
+        Omnibus omnibus = Omnibus(omnibusAddress);
+        omnibus.releaseDeposit(tenant, landlord, deposit);
+    }
+
+```
+</details>
+
+* Omnibus
+
+<details><summary>
+Solidity code for computing fund allocation
+</summary>
+
+```solidity
+      // in Constructor
+        interestRate = 1;
+        enhancedSpread = 3;
+        tenantInterestSplit = 60;
+        landlordInterestSplit = 20;
+        usInterestSplit = 20;
+
+      // under function releaseDeposit
+        tenantInterestPayment =  (deposit * interestRate/100) + (deposit * enhancedSpread/100 * tenantInterestSplit/100);
+        landlordInterestPayment = (deposit * enhancedSpread/100 * landlordInterestSplit/100);
+        usInterestPayment = (deposit * enhancedSpread/100 * usInterestSplit/100);
+
+        tenant.transfer(deposit);
+        tenant.transfer(tenantInterestPayment);
+        landlord.transfer(landlordInterestPayment);
+        us.transfer(usInterestPayment);
+
+```
+</details>
+
+* BankInterest
+
+<details><summary>
+Solidity code to generate funds in Omnibus bank account
+</summary>
+
+```solidity
+
+    function generateFunds() public payable {
+        
+        Omnibus.transfer(msg.value);
+    }
+
+```
+</details>
+
+
+_**Defined under [BankInterestGenerator.sol](Code/BankInterestGenerator.sol)**_
+
+* BankInterest
+
+_NOTE: Funding through BankInterest contract in Omnibus account may be substituted by transfering funds in MetaMask under Localhost: 8545._
+
+## Addresses and Variables 
+
+<details><summary>
+List of Variables and Addresses engaged in contracts
+</summary>
+
+| Contract |                              Variables                           |                              Addresses                               |
+|----------|------------------------------------------------------------------|----------------------------------------------------------------------|
+| Lease    |`apt`, `rent`, `deposit`, `shwoingfeepercent`, `servicefeepercent`|  landlord, tenant, us, consolidatedDeposits, previous, omnibusAddress|
+| Omnibus  |`interestRate`,`enhancedSpread`,`tenantInterestSplit`,`landlordInterestSplit`,`usInterestSplit`,`tenantInterestPayment`,`landlordInterestPayment`,`usInterestPayment`     |  landlord, tenant, us       |
+| Auction  | `apt`,`highestBid`,`rentPercent`,`depositPercent`,`rent`,`deposit`,`servicefeepercent`,`showingfeepercent` |  us, landlord, leaseAddress, omnibusAddress, previous, tenant      |
+| BankInterest |`Omnibus`                                                     |  Omnibus = _omnibusAddress                                                     |
+
+
+</details>
+
+## State (snapshots in process)
+
+<details><summary>
+State variable for emitted events
+</summary>
+
+| Contract | Variable |             Value            |
+|----------|----------|------------------------------|
+| Auction  | `state`  | Started, Terminated          |
+| Lease    | `state`  | Created, Started, Terminated |
+
+</details>
+
+## Mapping
+
+<details><summary>
+Map a variable onto positive integers
+</summary>
+
+| Contract | Variable          |             Value            |  Rationale              |
+|----------|-------------------|------------------------------|-------------------------|
+| Auction  | `pendingReturns`  | uint: positive integer       | withdrawals of overbids |
+
+</details>
+
+## Constructors
+
+<details><summary>
+Construct contracts by assigning values to variables
+</summary>
+
+| Contract   | Variable                                                           |                     Sample Code                                  |
+|------------|--------------------------------------------------------------------|------------------------------------------------------------------|
+| Auction    |`omnibusAddress`,`leaseAddress`,`landlord`, `apt`,`previous`,`us`,`servicefeepercent`,`showingfeepercent`|servicefeepercent = 5;       |
+| Lease      |   `us`                                                             |                         us = msg.sender;                         |
+| Omnibus|`interestRate`,`enhancedSpread`,`tenantInterestSplit`,`landlordInterestSplit`,`usInterestSplit`,`us`|usInterestSplit = 20; us = msg.sender;|
+
+</details>
+
+## Modifiers
+
+<details><summary>
+Modify conditions
+</summary>
+
+| Contract |       Modifier     |               Code               |
+|----------|--------------------|----------------------------------|
+| Auction  |   `inState`        | require(state == _state);        |
+| Auction  |   `onlyLandlord`   | require(landlord == msg.sender); |
+| Lease    |   `onlyLandlord`   | require(landlord == msg.sender); |
+| Lease    |   `onlyTenant`     | require(tenant == msg.sender);   |
+| Lease    |   `onlyUs`         | require(us == msg.sender);       |
+| Lease    |   `inState`        | require(state == _state);        |
+
+</details>
+
+## Events
+
+<details><summary>
+Events for dApps to listen to
+</summary>
+
+| Contract |         Event      |               Code               |
+|----------|--------------------|----------------------------------|
+| Auction  |`rentIncreased`     | event rentIncreased(address bidder, uint amount);|
+| Auction  |`AuctionEnded`      | event AuctionEnded(address winner, uint amount);|
+| Lease    |`landlordConfirmed` | require(landlord == msg.sender); |
+| Lease    |`tenantConfirmed`   | require(tenant == msg.sender);   |
+| Lease    |`paidRent`          | require(us == msg.sender);       |
+| Lease    |`paidDeposit`       | require(state == _state);        |
+| Lease    |`returnDeposit`     | require(state == _state);        |
+| Lease    |`paidShowingFee`    | require(state == _state);        |
+| Lease    |`contractTerminated`| require(state == _state);        |
+
+</details>
+
+## Functions
+
+<details><summary>
+Nested inside contracts for various purposes
+</summary>
+
+| Contract |  Function           |                                                Purpose                                                |
+|----------|---------------------|-------------------------------------------------------------------------------------------------------|
+| Auction  |`bid`                | allow rent increases based on highest bid after auction starts based on State                         |
+| Auction  |`withdraw`           | withdraw an overbid                                                                                   |
+| Auction  |`pendingReturn`      | amount for withdraw function                                                                          |
+| Auction  |`getbalance`         | return balance of the address                                                                         |
+| Auction  |`auctionEnd`         | landlord end the auction: rent, deposit, fees transfered to landlord, omnibus, previous tenant and us |
+| Lease    |`contruct`           | assign variables event-based values: _landlord, _omnibusAddress, _rent, _deposit, _apt)               |
+| Lease    |`payRent`            | allow tenant to pay rent to landloard after contract starts as indicated by State                     |
+| Lease    |`returnDeposit`      | enable landlord to reutrn depost to the leaving tenant from omnibus account upon contract termination |
+| Lease    |`requestShowingFee`  | pay showing fee to the previous tenant                                                                |
+| Lease    |`terminateContract`  | landlord concludes the lease contract                                                                 |
+| Lease    |`getbalance`         | return balance of the contract                                                                        |
+| Lease    |`() payable external`| required for the lease contract to be payable from an outside account                                 |
+| Omnibus  |`releaseDeposit`     | transfer interests and principal on deposit to tenant, landlord and us based on specified schedules   |
+| Omnibus  |`getbalance`         | return balance of the contract                                                                        |
+| Omnibus  |`() payable external`| required for the lease contract to be payable from an outside account                                 |
+| BankInterest|`generateFunds()` | transfer funds to _omnibusAddress                                                                     |
+
+</details>
 
 ---
 # Workflow
@@ -63,7 +359,10 @@ _Source: [Leasehold Token - The Decentralized Money Making Through Sort Term Ren
 
 ![Ganache Balances Prior to Transactions](Resources/Images/us_deploy_lease_ganache_0.png)
 
-_Five accounts with the following wallet addresses engage in transactions on BrokerlessMarket (first five in Ganache):_
+<details><summary>
+Five accounts with the following wallet addresses engage in transactions on BrokerlessMarket (first five in Ganache):
+</summary>
+
 ```
 Us: 
 0x0616d31438078849D3bf66591855B3D3239a9E5c
@@ -80,7 +379,7 @@ Previous:
 Bank: 
 0xBb2e65E2d7664E51A1547767d502169591642491
 ```
-
+</details>
 ---
 ### _Demo Transactions_
 
@@ -413,17 +712,6 @@ Archived Process for Previous Versions
 </details>
 
 
-
-## Contracts
-
-## Events
-
-## State (snapshots in process)
-
-## Modifiers
-
-
-
 ---
 # Results 
 
@@ -489,12 +777,12 @@ _**We would like to elaborate on the following aspects on our project:**_
   * json
   * pdf
   * png
-
 * Allow tenants to offer a higher security deposit that the landlord is allowed to invest (전세) -> more security for the landlord (better tenants)
 * Link with property listing platform
 * Late fee (require payRent function even month)
 * Events in place for javascript Dapps to listen to
   * For user friendly UI
+* Hosting a factory of contracts for multiple apartments: [Example on Github](https://github.com/brynbellomy/solidity-auction/blob/master/contracts/AuctionFactory.sol)
 
 ---
 # Files
@@ -523,15 +811,27 @@ _[Images](Resources/Images)_
 
 
 
-
-
-
 ---
 # References
 
+* Columbia University Fintech GitLab Repository
 * https://medium.com/@naqvi.jafar91/converting-a-property-rental-paper-contract-into-a-smart-contract-daa054fdf8a7
 * https://github.com/anudishjain/CharterContracts/blob/master/Smart%20Contracts/MainContract.sol @author-Anudish Jain
 * https://steemit.com/blockchain/@kurniawan05/leasehold-token-the-decentralized-money-making-through-sort-term-rental-tokenization
-
-
-
+* https://web3js.readthedocs.io/en/v1.2.8/web3-eth-abi.html#eth-abi
+* https://github.com/raineorshine/solidity-by-example
+* https://github.com/brynbellomy/solidity-auction/blob/master/contracts/AuctionFactory.sol
+* https://metamask.io/
+* https://www.trufflesuite.com/docs/ganache/truffle-projects/events-page
+* https://solidity.readthedocs.io/en/v0.6.9/solidity-by-example.html?highlight=auction
+* https://remix.ethereum.org/
+* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators
+* https://www.w3schools.com/js/js_operators.asp
+* https://flask.palletsprojects.com/en/1.1.x/
+* https://javascript.info/
+* https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/JavaScript_basics
+* https://github.com/ethereum/web3.js/
+* https://github.com/DavidAnson/markdownlint/blob/v0.20.3/doc/Rules.md#md032
+* https://ethereum.stackexchange.com/questions/7139/whats-the-solidity-statement-to-print-data-to-the-console
+* https://pinata.cloud/
+* https://www.quickdatabasediagrams.com/

@@ -17,7 +17,7 @@ headers = {
 
 
 def initContract():
-    with open(Path("smart_contract.json")) as json_file:
+    with open(Path("brokerless.json")) as json_file:
         abi = json.load(json_file)
 
     return w3.eth.contract(address=os.getenv("REGISTERAPT_ADDRESS"), abi=abi)
@@ -29,6 +29,7 @@ def convertDataToJSON(time, description):
         "pinataContent": {
             "name": "Example Accident Report",
             "description": description,
+            # This is the uploaded v1 URI for apartment on IPFS all in lower case
             "image": "ipfs://bafybeihsecbomd7gbu6qjnvs7jinlxeufujqzuz3ccazmhvkszsjpzzrsu",
             "time": time,
         },
