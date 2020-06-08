@@ -796,7 +796,7 @@ _**We would like to elaborate on the following aspects on our project:**_
 ---
 # Files
 
-### _**[Presentation](https://docs.google.com/presentation/d/1XqKJcWhoMMr_Lb58diU3U4TdTR0wG6HT/edit#slide=id.p6)**_
+### _**[Presentation](https://drive.google.com/file/d/1yOtBwaAWwaAazNI4HJ5oHh0SutkwNp6v/view?usp=drivesdk)**_
 
 ---
 
