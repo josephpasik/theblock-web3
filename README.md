@@ -717,9 +717,14 @@ Archived Process for Previous Versions
 ---
 # Results 
 
-## Frontend
 
-### Set up a Webpage on Github
+## _**Wix Frontend + Backend View**_
+### _Hakuna matata! This is how it appears!_
+
+![Hakuna matata](Resources/Images/wix_frontend_backend.png)
+
+
+### **Frontend: Set up a Webpage on Github**
 
 <details><summary>
 Step 1: Click on `Settings` on the Github repository
@@ -756,6 +761,8 @@ Step 4: Click on the link `here` under Demo App from the previous step to bid on
 Step 5: Register an apartment by entering Apartment name, Pinata API and Secret API Key
 
 ![webpage](Resources/Images/webpage.png)
+
+
 
 
 ---
@@ -805,6 +812,7 @@ _**We would like to elaborate on the following aspects on our project:**_
 **[dApps for Property Records](Code/py_dApp)**
 
 ---
+
 ## _Supplementary_
 
 _[Google Drive and Slack Resources](Resources/GoogleSlack)_
