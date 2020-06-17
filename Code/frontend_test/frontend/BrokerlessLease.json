@@ -83,24 +83,49 @@
 		"type": "function"
 	},
 	{
-		"constant": true,
-		"inputs": [],
-		"name": "deposit",
-		"outputs": [
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "_landlord",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "_tenant",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "_omnibusAddress",
+				"type": "address"
+			},
 			{
 				"internalType": "uint256",
-				"name": "",
+				"name": "_rent",
 				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_deposit",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_apt",
+				"type": "string"
 			}
 		],
+		"name": "construct",
+		"outputs": [],
 		"payable": false,
-		"stateMutability": "view",
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"constant": true,
 		"inputs": [],
-		"name": "enhancedRatebps",
+		"name": "deposit",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -128,30 +153,6 @@
 		"type": "function"
 	},
 	{
-		"constant": false,
-		"inputs": [],
-		"name": "initialPayout",
-		"outputs": [],
-		"payable": true,
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "interestRatebps",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"constant": true,
 		"inputs": [],
 		"name": "landlord",
@@ -160,30 +161,6 @@
 				"internalType": "address payable",
 				"name": "",
 				"type": "address"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "landlordConfirm",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "landlordInterestPayment",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
 			}
 		],
 		"payable": false,
@@ -247,15 +224,6 @@
 	{
 		"constant": false,
 		"inputs": [],
-		"name": "requestInterestLandlord",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [],
 		"name": "requestShowingFee",
 		"outputs": [],
 		"payable": false,
@@ -269,36 +237,6 @@
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"internalType": "address payable",
-				"name": "_omnibus",
-				"type": "address"
-			}
-		],
-		"name": "setOmnibusContract",
-		"outputs": [],
-		"payable": true,
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"internalType": "address payable",
-				"name": "_previous",
-				"type": "address"
-			}
-		],
-		"name": "setPrevious",
-		"outputs": [],
-		"payable": true,
-		"stateMutability": "payable",
 		"type": "function"
 	},
 	{
@@ -349,30 +287,6 @@
 	{
 		"constant": false,
 		"inputs": [],
-		"name": "tenantConfirm",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "tenantInterestPayment",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [],
 		"name": "terminateContract",
 		"outputs": [],
 		"payable": false,
@@ -388,21 +302,6 @@
 				"internalType": "address payable",
 				"name": "",
 				"type": "address"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "usInterestPayment",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
 			}
 		],
 		"payable": false,

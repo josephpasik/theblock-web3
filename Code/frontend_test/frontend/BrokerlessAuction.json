@@ -1,6 +1,32 @@
 [
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "_landlord",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_apt",
+				"type": "string"
+			},
+			{
+				"internalType": "address payable",
+				"name": "_previous",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "_leaseAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "address payable",
+				"name": "_omnibusAddress",
+				"type": "address"
+			}
+		],
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "constructor"
@@ -42,6 +68,21 @@
 		],
 		"name": "rentIncreased",
 		"type": "event"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "apt",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
 	},
 	{
 		"constant": false,
@@ -195,6 +236,21 @@
 	{
 		"constant": true,
 		"inputs": [],
+		"name": "previous",
+		"outputs": [
+			{
+				"internalType": "address payable",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
 		"name": "rent",
 		"outputs": [
 			{
@@ -223,33 +279,33 @@
 		"type": "function"
 	},
 	{
-		"constant": false,
-		"inputs": [
+		"constant": true,
+		"inputs": [],
+		"name": "servicefeepercent",
+		"outputs": [
 			{
-				"internalType": "address payable",
-				"name": "_address",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
-		"name": "setLeaseAddress",
-		"outputs": [],
-		"payable": true,
-		"stateMutability": "payable",
+		"payable": false,
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"constant": false,
-		"inputs": [
+		"constant": true,
+		"inputs": [],
+		"name": "showingfeepercent",
+		"outputs": [
 			{
-				"internalType": "address payable",
-				"name": "_address",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
-		"name": "setOmnibusContract",
-		"outputs": [],
-		"payable": true,
-		"stateMutability": "payable",
+		"payable": false,
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -258,7 +314,7 @@
 		"name": "state",
 		"outputs": [
 			{
-				"internalType": "enum BrokerlessAuction.State",
+				"internalType": "enum Auction.State",
 				"name": "",
 				"type": "uint8"
 			}
@@ -273,7 +329,22 @@
 		"name": "tenant",
 		"outputs": [
 			{
-				"internalType": "address",
+				"internalType": "address payable",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "us",
+		"outputs": [
+			{
+				"internalType": "address payable",
 				"name": "",
 				"type": "address"
 			}

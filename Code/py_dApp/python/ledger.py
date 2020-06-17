@@ -3,34 +3,37 @@ from dotenv import load_dotenv
 from record import convertDataToJSON, pinJSONtoIPFS, initContract, w3
 from pprint import pprint
 
-registerApt = initContract()
+cryptorecord = initContract()
+
 
 def createAptReport():
-    landlord = int(input("Landlord: "))
-    apt = int(input("Apt #: "))
-    previous = int(input("Previous Tenant: "))
-    lease = int(input("Lease: "))
-    omnibus = int(input("Omnibus: "))
+    landlord = input("Landlord: ")
+    # apt is treated as token_id here and "token_id" in CryptoRecord.sol
+    token_id = str(input("Apartment ID: "))
+    previous = input("Previous Tenant: ")
+    lease = int(input("Lease #: "))
+    omnibus = int(input("Omnibus #: "))
+    time = input("Date of the incident: ")
+    description = input("Description of the incident: ")
 
-    json_data = convertDataToJSON(landlord, apt, previous, lease, omnibus)
+    json_data = convertDataToJSON(landlord, token_id, previous, lease, omnibus, time, description)
     report_uri = pinJSONtoIPFS(json_data)
 
-    return landlord, report_uri
+    return token_id, report_uri
 
-
-def reportApt(landlord, report_uri):
-    tx_hash = registerApt.functions.reportApt(landlord, report_uri).transact(
+def reportIncident(token_id, report_uri):
+    tx_hash = cryptorecord.functions.reportIncident(token_id, report_uri).transact(
         {"from": w3.eth.accounts[0]}
     )
     receipt = w3.eth.waitForTransactionReceipt(tx_hash)
     return receipt
 
 
-def getAptReports(landlord):
-    apt_filter = registerApt.events.Apt.createFilter(
-        fromBlock="0x0", argument_filters={"landlord": landlord}
+def getAptReports(token_id):
+    incident_filter = cryptorecord.events.Incident.createFilter(
+        fromBlock="0x0", argument_filters={"Apartment": token_id}
     )
-    return apt_filter.get_all_entries()
+    return incident_filter.get_all_entries()
 
 
 # sys.argv is the list of arguments passed from the command line
@@ -41,13 +44,11 @@ def getAptReports(landlord):
 # python accident.py        report
 # python accident.py        get            1
 
-option = input("Would you like to get or report an apartment listing?")
-
 def main():
     if sys.argv[1] == "report":
-        landlord, report_uri = createAptReport()
+        token_id, landlord, report_uri = createAptReport()
 
-        receipt = reportApt(landlord, report_uri)
+        receipt = reportIncident(token_id, report_uri)
 
         pprint(receipt)
         print("Report IPFS Hash:", report_uri)
@@ -55,11 +56,11 @@ def main():
     if sys.argv[1] == "get":
         token_id = int(sys.argv[2])
 
-    apt = registerApt.functions.apts(landlord).call()
-    reports = getAptReports(landlord)
+        incident = cryptorecord.functions.apts(token_id).call()
+        reports = getAptReports(token_id)
 
     pprint(reports)
-    print("APT", apt[0], "has been in", apt[1], "apartments.")
+    print("APT", incident[0], "has been in", incident[1], "reports.")
     
 
 main()

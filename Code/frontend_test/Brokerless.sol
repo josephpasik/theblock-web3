@@ -356,13 +356,13 @@ contract Lease {
         emit paidRent();
         landlord.transfer(msg.value);
     }
-    
+/*    
     function setOmnibusContract(address payable _omnibus) public payable
 //    onlyUs
     {
         omnibusAddress = _omnibus;
     }
-
+*/
 /*
     function payDeposit() public payable
     onlyTenant
@@ -422,14 +422,14 @@ contract Omnibus {
     address payable landlord;
     address payable us;
     uint public deposit;
-    uint public interestRatebps;
-    uint public enhancedSpreadbps;
+    uint public interestRate;
+    uint public enhancedSpread;
     uint public tenantInterestSplit;
     uint public landlordInterestSplit;
     uint public usInterestSplit;
-//    uint public tenantInterestPayment;
-//    uint public landlordInterestPayment;
-//    uint public usInterestPayment;
+    uint public tenantInterestPayment;
+    uint public landlordInterestPayment;
+    uint public usInterestPayment;
 
     /*Constructor*/
 /*
@@ -444,12 +444,11 @@ contract Omnibus {
         us = msg.sender;
     }
 */
- 
     /*Test Constructor*/    
     constructor() 
     public {
-        interestRatebps = 500;
-        enhancedSpreadbps = 500;
+        interestRate = 1;
+        enhancedSpread = 3;
         tenantInterestSplit = 60;
         landlordInterestSplit = 20;
         usInterestSplit = 20;
@@ -462,15 +461,14 @@ contract Omnibus {
         landlord = _landlord;
         deposit = _deposit;
         
-//        tenantInterestPayment =  (interestRatebps/1000 * deposit) + (tenantInterestSplit/100 *(enhancedSpreadbps/1000 * deposit));
-//        landlordInterestPayment = (landlordInterestSplit/100 * (enhancedSpreadbps/1000 * deposit));
-//        usInterestPayment = (usInterestSplit/100 * (enhancedSpreadbps/1000 * deposit));
+        tenantInterestPayment =  (deposit * interestRate/100) + (deposit * enhancedSpread/100 * tenantInterestSplit/100);
+        landlordInterestPayment = (deposit * enhancedSpread/100 * landlordInterestSplit/100);
+        usInterestPayment = (deposit * enhancedSpread/100 * usInterestSplit/100);
         tenant.transfer(deposit);
-        tenant.transfer((interestRatebps/1000 * deposit) + (tenantInterestSplit/100 *(enhancedSpreadbps/1000 * deposit)));
-        landlord.transfer(landlordInterestSplit/100 * (enhancedSpreadbps/1000 * deposit));
-        us.transfer(usInterestSplit/100 * (enhancedSpreadbps/1000 * deposit));
+        tenant.transfer(tenantInterestPayment);
+        landlord.transfer(landlordInterestPayment);
+        us.transfer(usInterestPayment);
     }
-    
     
     function getbalance() public view returns (uint) {
         return address(this).balance;
